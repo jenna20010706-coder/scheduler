@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>교사 업무 스케줄러</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#1f2a26;--sub:#66746e;--line:#dbe3df;--accent:#2f6b57;--wk:#eef2f0;--tdy:#dff0e8;
+--c1:#d64545;--c2:#e8892b;--c3:#d4a90f;--c4:#8a9791;--c1b:#fdecec;--c2b:#fdf1e4;--c3b:#fdf7dc;--c4b:#eef1ef;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root:not([data-theme="light"]){}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--card:#1e2723;--ink:#e8eeeb;--sub:#93a19a;--line:#2f3b36;--accent:#5fb597;--wk:#1a221f;--tdy:#22392f;--c1b:#3a2222;--c2b:#3a2c1c;--c3b:#39331a;--c4b:#262d2a}}
+:root[data-theme="dark"]{--bg:#141a17;--card:#1e2723;--ink:#e8eeeb;--sub:#93a19a;--line:#2f3b36;--accent:#5fb597;--wk:#1a221f;--tdy:#22392f;--c1b:#3a2222;--c2b:#3a2c1c;--c3b:#39331a;--c4b:#262d2a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.45}
+.wrap{max-width:1000px;margin:0 auto;padding:12px 12px 60px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 12px;min-height:44px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+#alert{display:none;background:var(--c1b);border-left:6px solid var(--c1);padding:10px 14px;border-radius:8px;margin-bottom:12px;font-weight:600}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+h1{font-size:1.3rem;margin:0}.sub{color:var(--sub);font-size:.85rem}
+.bar1{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.seg{display:flex}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0;border-left:0}
+.seg button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--sub);margin-bottom:8px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.empty{color:var(--sub);text-align:center;padding:30px 0}
+/* timeline */
+.tl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.tr{display:flex;border-bottom:1px solid var(--line);min-height:52px}
+.tr.head{min-height:44px;position:sticky;top:0}
+.lc{flex:none;width:168px;position:sticky;left:0;z-index:3;background:var(--card);border-right:1px solid var(--line);display:flex;align-items:center;gap:4px;padding:4px 4px 4px 6px}
+.lc .nm{flex:1;min-width:0;font-size:.88rem;font-weight:600;word-break:break-word}
+.lc .nm small{display:block;font-weight:400;color:var(--sub);font-size:.72rem}
+.done .nm b{text-decoration:line-through;text-decoration-thickness:2px}.done{opacity:.65}
+.rc{position:relative;flex:none}
+.hc{position:absolute;top:0;bottom:0;text-align:center;font-size:.72rem;color:var(--sub);padding-top:5px;line-height:1.2}
+.hc b{display:block;color:var(--ink);font-size:.85rem}
+.wkd{position:absolute;top:0;bottom:0;background:var(--wk)}
+.tdy{position:absolute;top:0;bottom:0;background:var(--tdy)}
+.chk{flex:none;width:36px;height:36px;min-height:36px;padding:0;border-radius:8px;border:2px solid var(--sub);font-size:1.1rem;font-weight:700;line-height:1}
+.done .chk{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ib{flex:none;width:32px;height:32px;min-height:32px;padding:0;font-size:.85rem;border-radius:6px}
+.lbar{position:absolute;top:14px;height:24px;border-radius:12px;background:color-mix(in srgb,var(--qc) 22%,transparent);border:2px solid var(--qc);overflow:hidden}
+.lbar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--qc);opacity:.85}
+.lbar .lab{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:700;background:var(--card);color:var(--ink);border-radius:8px;padding:0 6px;white-space:nowrap}
+.q1{--qc:var(--c1)}.q2{--qc:var(--c2)}.q3{--qc:var(--c3)}.q4{--qc:var(--c4)}
+.done .lbar{--qc:var(--c4)}.done .lbar .fill{width:100%!important}
+.late .lbar .lab{background:var(--c1);color:#fff}
+.sec{padding:6px 10px;font-size:.8rem;color:var(--sub);background:var(--bg);border-bottom:1px solid var(--line);position:sticky;left:0}
+/* list */
+h2{font-size:1rem;margin:16px 0 8px;color:var(--sub)}
+.card{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-left:8px solid var(--qc);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.card .body{flex:1;min-width:0}.card .t{font-weight:600;word-break:break-word}.card .m{font-size:.8rem;color:var(--sub)}
+.card.done .t{text-decoration:line-through;text-decoration-thickness:2px}
+.mb{height:6px;border-radius:3px;background:color-mix(in srgb,var(--qc) 22%,transparent);margin-top:6px;overflow:hidden}.mb i{display:block;height:100%;background:var(--qc)}
+/* modal */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:14px;z-index:9}
+.box{background:var(--card);border-radius:14px;padding:18px;width:100%;max-width:440px}
+label{display:block;margin:12px 0 4px;font-weight:600;font-size:.9rem}
+input[type=text],input[type=date]{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--ink);min-height:44px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.two .seg button{flex:1}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="alert" role="status"></div>
+  <header>
+    <div><h1>업무 스케줄러</h1><div class="sub" id="today"></div><div class="sub" id="status"></div></div>
+    <button class="primary" id="addBtn">+ 업무 추가</button>
+  </header>
+  <div class="bar1">
+    <div class="seg"><button id="vTl" class="on">타임라인</button><button id="vList">목록</button></div>
+    <span id="nav" style="display:flex;gap:6px"><button id="prev" aria-label="이전 주">◀</button><button id="tod">오늘</button><button id="next" aria-label="다음 주">▶</button></span>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--c1)"></i>중요+긴급</span>
+    <span><i class="dot" style="background:var(--c2)"></i>중요</span>
+    <span><i class="dot" style="background:var(--c3)"></i>긴급</span>
+    <span><i class="dot" style="background:var(--c4)"></i>둘 다 낮음</span>
+  </div>
+  <main id="main"></main>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true"><div class="box">
+  <h1 id="mTitle" style="font-size:1.15rem">업무 추가</h1>
+  <label for="fName">업무 이름</label><input type="text" id="fName" maxlength="100" placeholder="예: 생활기록부 입력">
+  <div class="two"><div><label for="fStart">시작일</label><input type="date" id="fStart"></div><div><label for="fDue">마감일</label><input type="date" id="fDue"></div></div>
+  <div class="two">
+    <div><label>중요도</label><div class="seg" id="sImp"><button data-v="1" class="on">높음</button><button data-v="0">낮음</button></div></div>
+    <div><label>긴급도</label><div class="seg" id="sUrg"><button data-v="1" class="on">높음</button><button data-v="0">낮음</button></div></div>
+  </div>
+  <div class="actions"><button id="cancel">취소</button><button class="primary" id="save">저장</button></div>
+</div></div>
+
+<script>
+const KEY="teacherScheduler.v2",W=44,N=28,LW=168;
+let tasks=[],view="tl",ws=null,editId=null,imp=1,urg=1,doc=null,cloud=false,cloudErr=false;
+const $=id=>document.getElementById(id),pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const todayS=()=>ymd(new Date());
+const diff=(a,b)=>Math.round((new Date(a+"T00:00:00")-new Date(b+"T00:00:00"))/864e5);
+const addD=(s,n)=>{const d=new Date(s+"T00:00:00");d.setDate(d.getDate()+n);return ymd(d)};
+const DOW=["일","월","화","수","목","금","토"];
+const md=s=>{const d=new Date(s+"T00:00:00");return (d.getMonth()+1)+"/"+d.getDate()};
+const quad=t=>t.imp&&t.urg?1:t.imp?2:t.urg?3:4;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sortT=(a,b)=>a.due.localeCompare(b.due)||quad(a)-quad(b)||Number(a.id)-Number(b.id);
+const same=(a,b)=>String(a)===String(b);
+const norm=l=>(Array.isArray(l)?l:[]).filter(t=>t&&t.name&&t.start&&t.due).map(t=>({id:String(t.id),name:String(t.name),start:t.start,due:t.due,imp:t.imp?1:0,urg:t.urg?1:0,done:t.done===true||t.done==='true'}));
+
+function cacheLocal(){try{localStorage.setItem(KEY,JSON.stringify(tasks))}catch(e){}}
+function loadLocal(){try{const r=localStorage.getItem(KEY);tasks=norm(r?JSON.parse(r):[])}catch(e){tasks=[]}}
+function setStatus(){
+  $("status").textContent=cloudErr?"⚠️ 서버 저장에 실패했어요. 인터넷 연결을 확인해 주세요."
+   :cloud?"☁️ 자동 저장 중 · 같은 계정으로 열면 어느 기기에서나 보여요"
+   :"이 기기에만 저장돼요 (계정으로 열면 기기 간 자동 저장)";
+}
+function save(){
+  cacheLocal();
+  try{if(doc)Promise.resolve(doc.set({list:tasks})).then(()=>{cloudErr=false;cloud=true;setStatus()}).catch(()=>{cloudErr=true;setStatus()})}catch(e){cloudErr=true;setStatus()}
+}
+async function initCloud(){
+  try{
+    const c=window.claude;if(!c||!c.use)return;
+    const [db,user]=await Promise.all([c.use("db"),c.use("user")]);
+    if(!db||!user)return;
+    const id=await user.id();
+    doc=db.collection("data/users/"+id).doc("tasks");
+    doc.onSnapshot(snap=>{
+      if(snap.metadata&&snap.metadata.hasPendingWrites)return;
+      if(snap.exists){const d=snap.data();tasks=norm(d.list);cacheLocal()}
+      else if(tasks.length){doc.set({list:tasks}).catch(()=>{})}
+      cloud=true;cloudErr=false;setStatus();render();
+    },()=>{cloud=false;cloudErr=true;setStatus()});
+  }catch(e){}
+}
+
+function label(t){
+  const td=todayS(),d=diff(t.due,td);
+  if(t.done)return "완료";if(d<0)return "기한 지남 "+(-d)+"일";if(d===0)return "오늘 마감";return "D-"+d;
+}
+function pct(t){const tot=diff(t.due,t.start)+1,el=Math.min(Math.max(diff(todayS(),t.start)+1,0),tot);return Math.round(el/tot*100)}
+
+function renderAlert(){
+  const td=todayS(),tm=addD(td,1),o=tasks.filter(t=>!t.done),p=[];
+  const a=o.filter(t=>t.due<td).length,b=o.filter(t=>t.due===td).length,c=o.filter(t=>t.due===tm).length;
+  if(a)p.push("기한 지남 "+a+"건");if(b)p.push("오늘 마감 "+b+"건");if(c)p.push("내일 마감 "+c+"건");
+  $("alert").style.display=p.length?"block":"none";$("alert").textContent=p.length?"⚠️ "+p.join(" · "):"";
+}
+
+function leftCell(t){
+  return `<div class="lc"><button class="chk" data-a="toggle" data-id="${t.id}" aria-label="${t.done?"완료 취소":"완료"}">${t.done?"✓":""}</button>
+  <div class="nm"><b>${esc(t.name)}</b><small>${md(t.start)} ~ ${md(t.due)}</small></div>
+  <button class="ib" data-a="edit" data-id="${t.id}" aria-label="수정">✎</button><button class="ib" data-a="del" data-id="${t.id}" aria-label="삭제">✕</button></div>`;
+}
+
+function renderTL(){
+  if(!ws)ws=addD(todayS(),-2);
+  const td=todayS(),ti=diff(td,ws),RW=N*W;
+  let bg="",hd="";
+  for(let i=0;i<N;i++){
+    const s=addD(ws,i),d=new Date(s+"T00:00:00"),wd=d.getDay();
+    if(i===ti)bg+=`<div class="tdy" style="left:${i*W}px;width:${W}px"></div>`;
+    else if(wd===0||wd===6)bg+=`<div class="wkd" style="left:${i*W}px;width:${W}px"></div>`;
+    hd+=`<div class="hc" style="left:${i*W}px;width:${W}px"><b>${d.getDate()===1||i===0?(d.getMonth()+1)+"/":""}${d.getDate()}</b>${DOW[wd]}</div>`;
+  }
+  let h=`<div class="tl"><div style="width:${LW+RW}px"><div class="tr head"><div class="lc" style="font-size:.8rem;color:var(--sub)">${md(ws)} ~ ${md(addD(ws,N-1))}</div><div class="rc" style="width:${RW}px">${bg}${hd}</div></div>`;
+  const open=tasks.filter(t=>!t.done).sort(sortT),done=tasks.filter(t=>t.done).sort(sortT);
+  const row=t=>{
+    const s=diff(t.start,ws),e=diff(t.due,ws);let bar="";
+    if(e>=0&&s<=N-1){
+      const a=Math.max(s,0),b=Math.min(e,N-1);
+      bar=`<div class="lbar" style="left:${a*W+3}px;width:${(b-a+1)*W-6}px"><div class="fill" style="width:${pct(t)}%"></div><span class="lab">${label(t)}</span></div>`;
+    }
+    const late=!t.done&&diff(t.due,td)<0;
+    return `<div class="tr q${quad(t)} ${t.done?"done":""} ${late?"late":""}">${leftCell(t)}<div class="rc" style="width:${RW}px">${bg}${bar}</div></div>`;
+  };
+  if(!tasks.length)h+=`<div class="empty">업무가 없어요. '+ 업무 추가'로 시작해 보세요.</div>`;
+  h+=open.map(row).join("");
+  if(done.length)h+=`<div class="sec">완료한 업무 (${done.length})</div>`+done.map(row).join("");
+  $("main").innerHTML=h+`</div></div>`;
+}
+
+function card(t){
+  return `<div class="card q${quad(t)} ${t.done?"done":""}"><button class="chk" data-a="toggle" data-id="${t.id}" aria-label="${t.done?"완료 취소":"완료"}">${t.done?"✓":""}</button>
+  <div class="body"><div class="t">${esc(t.name)}</div><div class="m">${md(t.start)} ~ ${md(t.due)} · ${label(t)}</div><div class="mb"><i style="width:${t.done?100:pct(t)}%"></i></div></div>
+  <button class="ib" data-a="edit" data-id="${t.id}" aria-label="수정">✎</button><button class="ib" data-a="del" data-id="${t.id}" aria-label="삭제">✕</button></div>`;
+}
+function renderList(){
+  const td=todayS(),tm=addD(td,1),wk=addD(td,7),open=tasks.filter(t=>!t.done).sort(sortT),done=tasks.filter(t=>t.done).sort(sortT);
+  const g=[["기한 지남",t=>t.due<td],["오늘 마감",t=>t.due===td],["내일 마감",t=>t.due===tm],["7일 이내",t=>t.due>tm&&t.due<=wk],["이후",t=>t.due>wk]];
+  let h="";g.forEach(([n,f])=>{const l=open.filter(f);if(l.length)h+=`<h2>${n} (${l.length})</h2>`+l.map(card).join("")});
+  if(!open.length)h+=`<div class="empty">할 일이 없어요. '+ 업무 추가'로 시작해 보세요.</div>`;
+  if(done.length)h+=`<h2>완료한 업무 (${done.length})</h2>`+done.map(card).join("");
+  $("main").innerHTML=h;
+}
+function render(){
+  $("today").textContent=new Date().getFullYear()+"년 "+md(todayS()).replace("/","월 ")+"일 ("+DOW[new Date().getDay()]+")";
+  $("vTl").classList.toggle("on",view==="tl");$("vList").classList.toggle("on",view==="list");
+  $("nav").style.display=view==="tl"?"flex":"none";
+  renderAlert();view==="tl"?renderTL():renderList();
+}
+
+function setSeg(id,v){[...$(id).children].forEach(b=>b.classList.toggle("on",+b.dataset.v===v));if(id==="sImp")imp=v;else urg=v}
+["sImp","sUrg"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(b)setSeg(id,+b.dataset.v)}));
+function openModal(id){
+  editId=id;const t=tasks.find(x=>same(x.id,id));
+  $("mTitle").textContent=t?"업무 수정":"업무 추가";
+  $("fName").value=t?t.name:"";$("fStart").value=t?t.start:todayS();$("fDue").value=t?t.due:addD(todayS(),3);
+  setSeg("sImp",t?t.imp:1);setSeg("sUrg",t?t.urg:1);$("modal").style.display="flex";$("fName").focus();
+}
+const closeModal=()=>{$("modal").style.display="none"};
+$("addBtn").onclick=()=>openModal(null);$("cancel").onclick=closeModal;
+$("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+$("fStart").addEventListener("change",()=>{if($("fDue").value<$("fStart").value)$("fDue").value=$("fStart").value});
+$("save").onclick=()=>{
+  const name=$("fName").value.trim(),start=$("fStart").value,due=$("fDue").value;
+  if(!name){alert("업무 이름을 입력해 주세요.");return}
+  if(!start||!due){alert("시작일과 마감일을 골라 주세요.");return}
+  if(due<start){alert("마감일은 시작일보다 빠를 수 없어요.");return}
+  if(editId){Object.assign(tasks.find(x=>same(x.id,editId))||{},{name,start,due,imp,urg})}
+  else tasks.push({id:String(Date.now()),name,start,due,imp,urg,done:false});
+  save();closeModal();render();
+};
+$("vTl").onclick=()=>{view="tl";render()};$("vList").onclick=()=>{view="list";render()};
+$("prev").onclick=()=>{ws=addD(ws,-7);render()};$("next").onclick=()=>{ws=addD(ws,7);render()};
+$("tod").onclick=()=>{ws=addD(todayS(),-2);render()};
+$("main").addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b)return;const id=b.dataset.id,a=b.dataset.a;
+  if(a==="toggle"){const t=tasks.find(x=>same(x.id,id));if(t){t.done=!t.done;render();save();return}}
+  else if(a==="edit"){openModal(id);return}
+  else if(a==="del"){if(!confirm("이 업무를 삭제할까요?"))return;tasks=tasks.filter(x=>!same(x.id,id));save()}
+  render();
+});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+loadLocal();setStatus();render();initCloud();
+</script>
+</body>
+</html>
